@@ -1,8 +1,8 @@
 require('dotenv').config();
-const express   = require('express');
-const cors      = require('cors');
-const mongoose  = require('mongoose');
-const path      = require('path');
+const express = require('express');
+const cors = require('cors');
+const mongoose = require('mongoose');
+const path = require('path');
 
 const app = express();
 app.use(cors());
@@ -31,7 +31,7 @@ app.get('/:username', (req, res, next) => {
     res.sendFile(path.join(__dirname, 'public', 'perfil.html'));
 });
 
-const PUERTO = 3000;
+const PUERTO = process.env.PORT || 3000;
 app.listen(PUERTO, () => {
     console.log(`Servidor arrancado. Escuchando en http://localhost:${PUERTO}`);
 });
