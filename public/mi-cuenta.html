@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Mi Cuenta - Wallaclone</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .navbar {
+            background-color: #13c1ac;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        .navbar h2 { margin: 0; }
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            margin-left: 15px;
+        }
+
+        .seccion {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            max-width: 500px;
+            margin-bottom: 20px;
+        }
+
+        .seccion h2 {
+            margin-top: 0;
+            color: #333;
+            border-bottom: 2px solid #13c1ac;
+            padding-bottom: 10px;
+        }
+
+        label {
+            display: block;
+            margin-top: 12px;
+            font-weight: bold;
+            color: #555;
+            font-size: 14px;
+        }
+
+        input {
+            width: 95%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .btn-guardar {
+            margin-top: 20px;
+            width: 100%;
+            padding: 12px;
+            background-color: #13c1ac;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .btn-guardar:hover { background-color: #0e8c7c; }
+
+        #mensaje-update {
+            margin-top: 12px;
+            font-weight: bold;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .zona-peligro {
+            border: 2px solid #ff4d4d;
+        }
+
+        .zona-peligro h2 {
+            color: #ff4d4d;
+            border-bottom-color: #ff4d4d;
+        }
+
+        .zona-peligro p {
+            color: #555;
+            font-size: 14px;
+        }
+
+        .btn-borrar {
+            margin-top: 10px;
+            width: 100%;
+            padding: 12px;
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .btn-borrar:hover { background-color: #cc0000; }
+
+        #mensaje-delete {
+            margin-top: 12px;
+            font-weight: bold;
+            font-size: 14px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="navbar">
+        <h2>👤 Mi Cuenta</h2>
+        <div>
+            <a href="/mis-anuncios.html">Mis Anuncios</a>
+            <a href="/">⬅ Inicio</a>
+        </div>
+    </div>
+
+    <!-- Sección: Actualizar datos -->
+    <div class="seccion">
+        <h2>Actualizar mis datos</h2>
+        <p style="color:#555; font-size:14px;">Rellena solo los campos que quieras cambiar.</p>
+
+        <form id="form-update">
+            <label>Nuevo nombre de usuario</label>
+            <input type="text" id="nuevo-username" placeholder="Dejar vacío para no cambiar">
+
+            <label>Nuevo email</label>
+            <input type="email" id="nuevo-email" placeholder="Dejar vacío para no cambiar">
+
+            <label>Nueva contraseña</label>
+            <input type="password" id="nueva-password" placeholder="Dejar vacío para no cambiar">
+
+            <button type="submit" class="btn-guardar">Guardar cambios</button>
+        </form>
+        <p id="mensaje-update"></p>
+    </div>
+
+    <!-- Sección: Dar de baja -->
+    <div class="seccion zona-peligro">
+        <h2>Zona de peligro</h2>
+        <p>Al eliminar tu cuenta se borrarán <strong>todos tus anuncios, ofertas y favoritos</strong> de forma permanente. Esta acción no se puede deshacer.</p>
+        <button class="btn-borrar" id="btn-eliminar-cuenta">Eliminar mi cuenta definitivamente</button>
+        <p id="mensaje-delete"></p>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('wallaclone_token');
+        if (!token) {
+            alert('Acceso denegado. Inicia sesión primero.');
+            window.location.href = '/login.html';
+        }
+
+        // Actualizar datos
+        document.getElementById('form-update').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const cajaMensaje = document.getElementById('mensaje-update');
+
+            const body = {};
+            const username = document.getElementById('nuevo-username').value.trim();
+            const email = document.getElementById('nuevo-email').value.trim();
+            const password = document.getElementById('nueva-password').value;
+
+            if (username) body.username = username;
+            if (email) body.email = email;
+            if (password) body.password = password;
+
+            if (Object.keys(body).length === 0) {
+                cajaMensaje.textContent = 'Rellena al menos un campo para actualizar.';
+                cajaMensaje.style.color = 'orange';
+                return;
+            }
+
+            cajaMensaje.textContent = 'Guardando...';
+            cajaMensaje.style.color = 'black';
+
+            try {
+                const respuesta = await fetch('http://localhost:3000/usuarios/mi-cuenta', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify(body)
+                });
+
+                const datos = await respuesta.json();
+                if (respuesta.ok) {
+                    cajaMensaje.textContent = datos.mensaje;
+                    cajaMensaje.style.color = 'green';
+                    document.getElementById('form-update').reset();
+                    // Si cambió username o email, cerramos sesión para forzar nuevo login
+                    if (body.username || body.email) {
+                        setTimeout(() => {
+                            localStorage.removeItem('wallaclone_token');
+                            window.location.href = '/login.html';
+                        }, 2500);
+                    }
+                } else {
+                    cajaMensaje.textContent = datos.error;
+                    cajaMensaje.style.color = 'red';
+                }
+            } catch {
+                cajaMensaje.textContent = 'Error de conexión con el servidor.';
+                cajaMensaje.style.color = 'red';
+            }
+        });
+
+        // Eliminar cuenta
+        document.getElementById('btn-eliminar-cuenta').addEventListener('click', async () => {
+            const confirmacion = confirm(
+                '¿Estás seguro? Se eliminarán tu cuenta, todos tus anuncios, tus ofertas y tus favoritos. Esta acción es irreversible.'
+            );
+            if (!confirmacion) return;
+
+            const cajaMensaje = document.getElementById('mensaje-delete');
+            cajaMensaje.textContent = 'Eliminando cuenta...';
+            cajaMensaje.style.color = 'black';
+
+            try {
+                const respuesta = await fetch('http://localhost:3000/usuarios/mi-cuenta', {
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+
+                const datos = await respuesta.json();
+                if (respuesta.ok) {
+                    cajaMensaje.textContent = datos.mensaje;
+                    cajaMensaje.style.color = 'green';
+                    localStorage.removeItem('wallaclone_token');
+                    setTimeout(() => window.location.href = '/', 2000);
+                } else {
+                    cajaMensaje.textContent = datos.error;
+                    cajaMensaje.style.color = 'red';
+                }
+            } catch {
+                cajaMensaje.textContent = 'Error de conexión con el servidor.';
+                cajaMensaje.style.color = 'red';
+            }
+        });
+    </script>
+
+</body>
+</html>

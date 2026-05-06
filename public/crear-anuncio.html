@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Crear Anuncio - Wallaclone</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .caja-crear {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 400px;
+        }
+
+        h1 {
+            color: #13c1ac;
+            margin-top: 0;
+            text-align: center;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 90%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-family: Arial, sans-serif;
+        }
+
+        button {
+            width: 95%;
+            padding: 10px;
+            margin-top: 10px;
+            background-color: #13c1ac;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        #mensaje {
+            margin-top: 15px;
+            font-weight: bold;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="caja-crear">
+        <h1>Publicar Nuevo Artículo</h1>
+        <form id="form-crear">
+            <input type="text" id="nombre" placeholder="¿Qué vendes o buscas? (ej: Patinete)" required>
+            <input type="number" id="precio" placeholder="Precio en €" required>
+
+            <select id="tipo" required>
+                <option value="venta">Lo vendo</option>
+                <option value="busqueda">Lo busco</option>
+            </select>
+
+            <input type="url" id="foto" placeholder="URL de la imagen (ej: https://...)">
+            <input type="text" id="tags" placeholder="Tags separados por comas (ej: motor, lifestyle)" required>
+
+            <textarea id="descripcion" rows="4" placeholder="Describe tu artículo detalladamente..."
+                required></textarea>
+
+            <button type="submit">Publicar Anuncio</button>
+        </form>
+        <p id="mensaje"></p>
+        <div style="text-align: center; margin-top: 10px;">
+            <a href="/">Volver a inicio</a>
+        </div>
+    </div>
+
+    <script>
+        // 1. SEGURIDAD FRONTEND: Comprobamos si el usuario tiene la pulsera VIP
+        const token = localStorage.getItem('wallaclone_token');
+
+        if (!token) {
+            // Si no tiene token, le avisamos y lo mandamos a la página de login
+            alert("Acceso denegado. Debes iniciar sesión para crear un anuncio.");
+            window.location.href = '/login.html';
+        }
+
+        // 2. Manejamos el envío del formulario
+        document.getElementById('form-crear').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const nombre = document.getElementById('nombre').value;
+            const precio = document.getElementById('precio').value;
+            const tipo = document.getElementById('tipo').value;
+            const descripcion = document.getElementById('descripcion').value;
+            const foto = document.getElementById('foto').value;
+
+            // Convertimos el texto de los tags ("motor, coche") en una lista real para la base de datos
+            const tagsInput = document.getElementById('tags').value;
+            const tagsArreglo = tagsInput.split(',').map(tag => tag.trim());
+
+            const cajaMensaje = document.getElementById('mensaje');
+            cajaMensaje.textContent = "Publicando...";
+            cajaMensaje.style.color = "black";
+
+            try {
+                // Enviamos los datos al servidor...
+                const respuesta = await fetch('http://localhost:3000/anuncios', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        // ¡MUY IMPORTANTE! Le enseñamos la pulsera al portero:
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({
+                        nombre,
+                        precio,
+                        tipo,
+                        tags: tagsArreglo,
+                        descripcion,
+                        foto
+                    })
+                });
+
+                const datos = await respuesta.json();
+
+                if (respuesta.ok) {
+                    cajaMensaje.textContent = "¡Anuncio publicado con éxito! Redirigiendo...";
+                    cajaMensaje.style.color = "green";
+
+                    // En 2 segundos, lo mandamos a ver todos los anuncios
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 2000);
+                } else {
+                    // Si el portero no nos deja pasar (ej: token caducado)
+                    cajaMensaje.textContent = datos.error;
+                    cajaMensaje.style.color = "red";
+                    if (respuesta.status === 401) {
+                        localStorage.removeItem('wallaclone_token'); // Borramos la pulsera falsa
+                        setTimeout(() => window.location.href = '/login.html', 2000);
+                    }
+                }
+            } catch (error) {
+                cajaMensaje.textContent = "Error de conexión con el servidor.";
+                cajaMensaje.style.color = "red";
+            }
+        });
+    </script>
+
+</body>
+
+</html>

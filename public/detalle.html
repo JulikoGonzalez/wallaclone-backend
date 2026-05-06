@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Detalle del Anuncio - Wallaclone</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            padding: 20px;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        .caja-detalle {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 500px;
+            margin-top: 50px;
+            position: relative;
+        }
+
+        h1 {
+            color: #333;
+            margin-top: 0;
+        }
+
+        .precio {
+            font-size: 32px;
+            font-weight: bold;
+            color: #13c1ac;
+            margin: 15px 0;
+        }
+
+        .etiqueta {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .venta {
+            background-color: #e6f7f5;
+            color: #13c1ac;
+        }
+
+        .busqueda {
+            background-color: #fef0ed;
+            color: #f55a3c;
+        }
+
+        .descripcion {
+            font-size: 16px;
+            line-height: 1.5;
+            color: #555;
+        }
+
+        .autor {
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+            color: gray;
+            font-size: 14px;
+        }
+
+        .estado-cartel {
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            font-size: 18px;
+        }
+
+        .cartel-reservado {
+            background-color: #ffa500;
+            color: white;
+        }
+
+        .cartel-vendido {
+            background-color: #808080;
+            color: white;
+        }
+
+        .btn-volver {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #13c1ac;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .btn-favorito {
+            margin-top: 15px;
+            padding: 10px;
+            background: #ffcc00;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            font-size: 16px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="caja-detalle">
+        <a href="/" class="btn-volver">⬅ Volver al listado</a>
+        <div id="contenido-anuncio">
+            <p>Cargando información del anuncio...</p>
+        </div>
+    </div>
+
+    <script>
+        // Extraemos el ID del final de la URL SEO-friendly: /anuncio/nombre-del-articulo-OBJECTID
+        // El ObjectId de MongoDB siempre tiene exactamente 24 caracteres hexadecimales
+        const slug = window.location.pathname.split('/').pop();
+        const idAnuncio = slug.slice(-24);
+        const tokenActual = localStorage.getItem('wallaclone_token');
+
+        if (!idAnuncio || idAnuncio.length !== 24) {
+            document.getElementById('contenido-anuncio').innerHTML = '<p>Error: URL de anuncio no válida.</p>';
+        } else {
+            fetch(`http://localhost:3000/anuncios/${idAnuncio}`)
+                .then(respuesta => respuesta.json())
+                .then(anuncio => {
+                    if (anuncio.error) {
+                        document.getElementById('contenido-anuncio').innerHTML = `<p>${anuncio.error}</p>`;
+                        return;
+                    }
+
+                    // Actualizamos el título de la pestaña con el nombre real del anuncio
+                    document.title = `${anuncio.nombre} - Wallaclone`;
+
+                    let cartelesHTML = '';
+                    if (anuncio.vendido) cartelesHTML = '<div class="estado-cartel cartel-vendido">ESTE ARTÍCULO YA SE HA VENDIDO 🤝</div>';
+                    else if (anuncio.reservado) cartelesHTML = '<div class="estado-cartel cartel-reservado">ARTÍCULO ACTUALMENTE RESERVADO ⏳</div>';
+
+                    const nombreAutor = anuncio.autor?.username || 'Anónimo';
+                    const autorId     = anuncio.autor?._id || '';
+                    const fotoSrc = anuncio.foto || 'https://placehold.co/500x300?text=Sin+imagen';
+                    const urlActual = window.location.href;
+                    const textoCompartir = `¡Mira lo que he encontrado en Wallaclone: ${anuncio.nombre} por solo ${anuncio.precio}€!`;
+
+                    // Decodificamos el token para saber si el usuario actual es el propietario
+                    let miId = null;
+                    if (tokenActual) {
+                        try { miId = JSON.parse(atob(tokenActual.split('.')[1])).id; } catch {}
+                    }
+                    const soyPropietario = miId && autorId && miId === autorId.toString();
+
+                    let botonFavoritoHTML = '';
+                    let botonChatHTML = '';
+                    if (tokenActual && !soyPropietario && autorId) {
+                        const urlChat = `/chat.html?anuncioId=${anuncio._id}&conUsuarioId=${autorId}&conUsuario=${encodeURIComponent(nombreAutor)}`;
+                        botonChatHTML = `
+                            <a href="${urlChat}" style="display:block; margin-top:12px; padding:10px; background:#4a90d9; color:white; text-align:center; border-radius:4px; font-weight:bold; text-decoration:none; font-size:15px;">💬 Chatear con el vendedor</a>
+                        `;
+                        botonFavoritoHTML = `
+                            <button onclick="marcarFavorito('${anuncio._id}')" class="btn-favorito">⭐ Añadir / Quitar Favorito</button>
+                            <p id="mensaje-fav" style="text-align:center; color:green; font-weight:bold; margin-top:5px;"></p>
+                        `;
+                    } else if (tokenActual && soyPropietario) {
+                        botonFavoritoHTML = `
+                            <a href="/mis-conversaciones.html" style="display:block; margin-top:12px; padding:10px; background:#4a90d9; color:white; text-align:center; border-radius:4px; font-weight:bold; text-decoration:none; font-size:15px;">💬 Ver conversaciones sobre este anuncio</a>
+                        `;
+                    }
+
+                    document.getElementById('contenido-anuncio').innerHTML = `
+                        ${cartelesHTML}
+                        <img src="${fotoSrc}" alt="${anuncio.nombre}" onerror="this.src='https://placehold.co/500x300?text=Sin+imagen'" style="width:100%; border-radius:6px; margin-bottom:20px; max-height:300px; object-fit:cover;">
+                        <h1>${anuncio.nombre}</h1>
+                        <span class="etiqueta ${anuncio.tipo}">${anuncio.tipo.toUpperCase()}</span>
+                        <div class="precio">${anuncio.precio} €</div>
+                        <div class="descripcion">
+                            <h3>Descripción:</h3>
+                            <p>${anuncio.descripcion}</p>
+                        </div>
+                        <p><strong>Tags:</strong> ${anuncio.tags.join(', ')}</p>
+                        <div class="autor">👤 Publicado por: <a href="/${nombreAutor}" style="color:#13c1ac; font-weight:bold;">${nombreAutor}</a></div>
+
+                        ${botonChatHTML}
+                        ${botonFavoritoHTML}
+
+                        <div style="margin-top: 25px; padding-top: 15px; border-top: 1px solid #eee;">
+                            <p style="margin-bottom: 10px; color: #555;"><strong>Compartir este anuncio:</strong></p>
+                            <a href="https://twitter.com/intent/tweet?text=${encodeURIComponent(textoCompartir)}&url=${encodeURIComponent(urlActual)}" target="_blank" style="background: #1DA1F2; color: white; padding: 8px 12px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 14px;">🐦 Compartir en Twitter</a>
+                            <a href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(urlActual)}" target="_blank" style="background: #4267B2; color: white; padding: 8px 12px; text-decoration: none; border-radius: 4px; margin-left: 10px; font-weight: bold; font-size: 14px;">📘 Compartir en Facebook</a>
+                        </div>
+                    `;
+                })
+                .catch(error => {
+                    document.getElementById('contenido-anuncio').innerHTML = '<p>Error al conectar con el servidor.</p>';
+                });
+        }
+
+        // Función para enviar la orden al servidor
+        async function marcarFavorito(id) {
+            try {
+                const respuesta = await fetch(`http://localhost:3000/favoritos/${id}`, {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + tokenActual }
+                });
+                const datos = await respuesta.json();
+                document.getElementById('mensaje-fav').innerText = datos.mensaje;
+            } catch (error) {
+                alert("Error al conectar con el servidor");
+            }
+        }
+    </script>
+</body>
+
+</html>

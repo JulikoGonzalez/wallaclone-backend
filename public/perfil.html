@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Wallaclone - Perfil</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .navbar {
+            background-color: #13c1ac;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        .navbar h2 {
+            margin: 0;
+        }
+
+        .menu-botones a,
+        .menu-botones button {
+            margin-left: 10px;
+            padding: 8px 15px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .btn-blanco {
+            background-color: white;
+            color: #13c1ac;
+            border: 1px solid white;
+        }
+
+        .btn-oscuro {
+            background-color: #0e8c7c;
+            color: white;
+            border: none;
+        }
+
+        .btn-peligro {
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+        }
+
+        .cabecera-perfil {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .cabecera-perfil h1 {
+            margin: 0 0 5px 0;
+            color: #333;
+        }
+
+        .cabecera-perfil p {
+            color: gray;
+            margin: 0;
+        }
+
+        .galeria {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .anuncio {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            width: 250px;
+        }
+
+        .precio {
+            font-size: 24px;
+            font-weight: bold;
+            color: #13c1ac;
+            margin: 10px 0;
+        }
+
+        .etiqueta {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .venta {
+            background-color: #e6f7f5;
+            color: #13c1ac;
+        }
+
+        .busqueda {
+            background-color: #fef0ed;
+            color: #f55a3c;
+        }
+
+        .estado-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-left: 5px;
+            background-color: #ffd700;
+            color: #333;
+        }
+
+        .paginacion {
+            text-align: center;
+            margin-top: 20px;
+            padding: 20px;
+        }
+
+        .paginacion button {
+            padding: 10px 20px;
+            margin: 0 10px;
+            background-color: #13c1ac;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .paginacion button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .paginacion span {
+            font-weight: bold;
+            color: #555;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="navbar">
+        <h2><a href="/" style="color:white; text-decoration:none;">🛍️ Wallaclone</a></h2>
+        <div class="menu-botones" id="menu-dinamico"></div>
+    </div>
+
+    <div class="cabecera-perfil">
+        <h1 id="titulo-perfil">Cargando perfil...</h1>
+        <p id="subtitulo-perfil"></p>
+    </div>
+
+    <div id="contenedor-anuncios" class="galeria">
+        <p>Cargando anuncios...</p>
+    </div>
+
+    <div class="paginacion">
+        <button id="btn-anterior" disabled>⬅ Anteriores</button>
+        <span id="texto-pagina">Página 1</span>
+        <button id="btn-siguiente" disabled>Siguientes ➡</button>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('wallaclone_token');
+        const menuDinamico = document.getElementById('menu-dinamico');
+
+        if (token) {
+            menuDinamico.innerHTML = `
+                <a href="/crear-anuncio.html" class="btn-oscuro">+ Crear Anuncio</a>
+                <a href="/mis-anuncios.html" class="btn-oscuro">Mis Anuncios</a>
+                <button id="btn-logout" class="btn-peligro">Cerrar Sesión</button>
+            `;
+            document.getElementById('btn-logout').addEventListener('click', async () => {
+                const t = localStorage.getItem('wallaclone_token');
+                await fetch('http://localhost:3000/logout', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + t }
+                }).catch(() => {});
+                localStorage.removeItem('wallaclone_token');
+                window.location.reload();
+            });
+        } else {
+            menuDinamico.innerHTML = `
+                <a href="/login.html" class="btn-blanco">Iniciar Sesión</a>
+                <a href="/registro.html" class="btn-blanco">Registrarse</a>
+            `;
+        }
+
+        // Extraemos el username de la URL, eliminando slashes inicial y final
+        const username = window.location.pathname.replace(/^\/|\/$/g, '');
+
+        document.getElementById('titulo-perfil').innerText = `Perfil de ${username}`;
+
+        let paginaActual = 1;
+
+        function cargarAnunciosUsuario(pagina) {
+            fetch(`/api/usuarios/${username}/anuncios?page=${pagina}`)
+                .then(res => res.json())
+                .then(paquete => {
+                    const contenedor = document.getElementById('contenedor-anuncios');
+
+                    if (paquete.error || !paquete.anuncios || paquete.anuncios.length === 0) {
+                        contenedor.innerHTML = '<p>Este usuario no tiene anuncios publicados.</p>';
+                        document.getElementById('subtitulo-perfil').innerText = '0 anuncios publicados';
+                        document.getElementById('btn-anterior').disabled = true;
+                        document.getElementById('btn-siguiente').disabled = true;
+                        document.getElementById('texto-pagina').innerText = 'Página 0';
+                        return;
+                    }
+
+                    document.getElementById('subtitulo-perfil').innerText =
+                        `Página ${paquete.paginaActual} de ${paquete.totalPaginas}`;
+                    contenedor.innerHTML = '';
+
+                    paquete.anuncios.forEach(anuncio => {
+                        const tarjeta = document.createElement('div');
+                        tarjeta.className = 'anuncio';
+                        const fotoSrc = anuncio.foto || 'https://placehold.co/250x160?text=Sin+imagen';
+                        const slug = anuncio.nombre.toLowerCase()
+                            .normalize('NFD').replace(/[̀-ͯ]/g, '')
+                            .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+                        const urlDetalle = `/anuncio/${slug}-${anuncio._id}`;
+
+                        const estadoBadge = anuncio.vendido
+                            ? '<span class="estado-badge">VENDIDO</span>'
+                            : anuncio.reservado
+                                ? '<span class="estado-badge">RESERVADO</span>'
+                                : '';
+
+                        tarjeta.innerHTML = `
+                            <img style="width:100%;height:160px;object-fit:cover;border-radius:4px;margin-bottom:10px;" src="${fotoSrc}" alt="${anuncio.nombre}" onerror="this.src='https://placehold.co/250x160?text=Sin+imagen'">
+                            <h2>${anuncio.nombre} ${estadoBadge}</h2>
+                            <p class="precio">${anuncio.precio} €</p>
+                            <span class="etiqueta ${anuncio.tipo}">${anuncio.tipo.toUpperCase()}</span>
+                            <p>${anuncio.descripcion}</p>
+                            <small>Tags: ${anuncio.tags.join(', ')}</small>
+                            <a href="${urlDetalle}" style="display:block; margin-top:15px; color:#13c1ac; text-decoration:none; font-weight:bold;">Ver detalle ➡</a>
+                        `;
+                        contenedor.appendChild(tarjeta);
+                    });
+
+                    paginaActual = paquete.paginaActual;
+                    document.getElementById('texto-pagina').innerText =
+                        `Página ${paginaActual} de ${paquete.totalPaginas}`;
+                    document.getElementById('btn-anterior').disabled = paginaActual <= 1;
+                    document.getElementById('btn-siguiente').disabled = paginaActual >= paquete.totalPaginas;
+                })
+                .catch(() => {
+                    document.getElementById('contenedor-anuncios').innerHTML = '<p>Error al cargar el perfil.</p>';
+                });
+        }
+
+        document.getElementById('btn-anterior').addEventListener('click', () => cargarAnunciosUsuario(paginaActual - 1));
+        document.getElementById('btn-siguiente').addEventListener('click', () => cargarAnunciosUsuario(paginaActual + 1));
+
+        cargarAnunciosUsuario(1);
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Mis Favoritos - Wallaclone</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .navbar {
+            background-color: #13c1ac;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        .navbar h2 { margin: 0; }
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            margin-left: 15px;
+        }
+
+        h1 { color: #333; }
+
+        .galeria {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .anuncio {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 250px;
+        }
+
+        .anuncio img {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+
+        .precio {
+            font-size: 22px;
+            font-weight: bold;
+            color: #13c1ac;
+            margin: 8px 0;
+        }
+
+        .etiqueta {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .venta    { background-color: #e6f7f5; color: #13c1ac; }
+        .busqueda { background-color: #fef0ed; color: #f55a3c; }
+
+        .autor {
+            font-size: 12px;
+            color: gray;
+            margin-top: 8px;
+            border-top: 1px solid #eee;
+            padding-top: 8px;
+        }
+
+        .estado-cartel {
+            padding: 4px;
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .cartel-reservado { background-color: #ffa500; color: white; }
+        .cartel-vendido   { background-color: #808080; color: white; }
+
+        .btn-quitar-fav {
+            display: block;
+            width: 100%;
+            margin-top: 10px;
+            padding: 8px;
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 13px;
+        }
+
+        .btn-quitar-fav:hover { background-color: #cc0000; }
+    </style>
+</head>
+
+<body>
+
+    <div class="navbar">
+        <h2>⭐ Mis Favoritos</h2>
+        <div>
+            <a href="/">⬅ Inicio</a>
+        </div>
+    </div>
+
+    <h1>Anuncios guardados</h1>
+
+    <div id="contenedor-favoritos" class="galeria">
+        <p>Cargando favoritos...</p>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('wallaclone_token');
+        if (!token) {
+            alert('Debes iniciar sesión para ver tus favoritos.');
+            window.location.href = '/login.html';
+        }
+
+        function generarUrlAnuncio(nombre, id) {
+            const slug = nombre.toLowerCase()
+                .normalize('NFD').replace(/[̀-ͯ]/g, '')
+                .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+            return `/anuncio/${slug}-${id}`;
+        }
+
+        function cargarFavoritos() {
+            fetch('http://localhost:3000/favoritos', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            })
+            .then(r => r.json())
+            .then(favoritos => {
+                const contenedor = document.getElementById('contenedor-favoritos');
+
+                if (!Array.isArray(favoritos) || favoritos.length === 0) {
+                    contenedor.innerHTML = '<p>Todavía no tienes ningún anuncio guardado como favorito.</p>';
+                    return;
+                }
+
+                contenedor.innerHTML = '';
+
+                favoritos.forEach(anuncio => {
+                    const tarjeta = document.createElement('div');
+                    tarjeta.className = 'anuncio';
+
+                    const fotoSrc    = anuncio.foto || 'https://placehold.co/250x160?text=Sin+imagen';
+                    const urlDetalle = generarUrlAnuncio(anuncio.nombre, anuncio._id);
+                    const nombreAutor = anuncio.autor?.username || 'Anónimo';
+
+                    let cartelHTML = '';
+                    if (anuncio.vendido)        cartelHTML = '<div class="estado-cartel cartel-vendido">VENDIDO</div>';
+                    else if (anuncio.reservado) cartelHTML = '<div class="estado-cartel cartel-reservado">RESERVADO</div>';
+
+                    tarjeta.innerHTML = `
+                        ${cartelHTML}
+                        <img src="${fotoSrc}" alt="${anuncio.nombre}" onerror="this.src='https://placehold.co/250x160?text=Sin+imagen'">
+                        <h2>${anuncio.nombre}</h2>
+                        <p class="precio">${anuncio.precio} €</p>
+                        <span class="etiqueta ${anuncio.tipo}">${anuncio.tipo.toUpperCase()}</span>
+                        <p>${anuncio.descripcion}</p>
+                        <small>Tags: ${anuncio.tags.join(', ')}</small>
+                        <div class="autor">👤 <a href="/${nombreAutor}" style="color:#13c1ac;">${nombreAutor}</a></div>
+                        <a href="${urlDetalle}" style="display:block; margin-top:10px; color:#13c1ac; text-decoration:none; font-weight:bold; font-size:13px;">Ver detalle ➡</a>
+                        <button class="btn-quitar-fav" onclick="quitarFavorito('${anuncio._id}')">✕ Quitar de favoritos</button>
+                    `;
+                    contenedor.appendChild(tarjeta);
+                });
+            })
+            .catch(() => {
+                document.getElementById('contenedor-favoritos').innerHTML = '<p style="color:red;">Error al cargar los favoritos.</p>';
+            });
+        }
+
+        async function quitarFavorito(idAnuncio) {
+            try {
+                const respuesta = await fetch(`http://localhost:3000/favoritos/${idAnuncio}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (respuesta.ok) cargarFavoritos();
+                else {
+                    const datos = await respuesta.json();
+                    alert(datos.error || 'Error al eliminar el favorito.');
+                }
+            } catch {
+                alert('Error al conectar con el servidor.');
+            }
+        }
+
+        cargarFavoritos();
+
+        // Notificaciones en tiempo real
+        const panelNotif = document.createElement('div');
+        panelNotif.id = 'panel-notif';
+        panelNotif.style.cssText = 'display:none; position:fixed; top:80px; right:20px; width:370px; background:white; border-radius:8px; box-shadow:0 4px 20px rgba(0,0,0,0.2); z-index:1000; max-height:420px; overflow-y:auto;';
+        panelNotif.innerHTML = `
+            <div style="padding:12px 15px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; background:#f8f8f8; border-radius:8px 8px 0 0;">
+                <strong style="font-size:15px;">🔔 Notificaciones</strong>
+                <button onclick="document.getElementById('panel-notif').style.display='none'" style="background:none; border:none; cursor:pointer; font-size:18px; color:#888;">✕</button>
+            </div>
+            <div id="lista-notif"></div>
+        `;
+        document.body.appendChild(panelNotif);
+
+        const btnNotif = document.createElement('button');
+        btnNotif.id = 'btn-notif';
+        btnNotif.style.cssText = 'position:relative; background:#fff3cd; color:#333; border:none; border-radius:4px; padding:8px 12px; cursor:pointer; font-weight:bold; margin-left:10px;';
+        btnNotif.innerHTML = '🔔 <span id="contador-notif" style="display:none; position:absolute; top:-6px; right:-6px; background:#ff4d4d; color:white; border-radius:50%; padding:1px 5px; font-size:11px;"></span>';
+        btnNotif.addEventListener('click', () => {
+            const panel = document.getElementById('panel-notif');
+            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+        });
+        document.querySelector('.navbar div').appendChild(btnNotif);
+
+        function cargarNotificaciones() {
+            fetch('http://localhost:3000/mis-notificaciones', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            })
+            .then(r => r.json())
+            .then(notifs => {
+                const contador = document.getElementById('contador-notif');
+                const lista    = document.getElementById('lista-notif');
+
+                if (!Array.isArray(notifs) || notifs.length === 0) {
+                    contador.style.display = 'none';
+                    lista.innerHTML = '<p style="padding:20px; text-align:center; color:gray; font-size:14px; margin:0;">Sin notificaciones nuevas</p>';
+                    return;
+                }
+
+                contador.textContent   = notifs.length;
+                contador.style.display = 'inline';
+                lista.innerHTML        = '';
+
+                notifs.forEach(notif => {
+                    const slug = notif.anuncio.nombre.toLowerCase()
+                        .normalize('NFD').replace(/[̀-ͯ]/g, '')
+                        .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+                    const urlDetalle = `/anuncio/${slug}-${notif.anuncio._id}`;
+
+                    let mensajeHTML, botonesHTML;
+
+                    if (notif.tipo === 'favorito_vendido') {
+                        mensajeHTML = `🏷️ <strong>${notif.anuncio.nombre}</strong> ha sido marcado como <strong style="color:#808080;">VENDIDO 🤝</strong>.`;
+                        botonesHTML = `
+                            <a href="${urlDetalle}" onclick="marcarLeida('${notif._id}')" style="flex:1; padding:7px; background:#13c1ac; color:white; border-radius:4px; text-align:center; text-decoration:none; font-size:13px; font-weight:bold;">Ver detalle</a>
+                            <button onclick="quitarFavoritoNotif('${notif.anuncio._id}','${notif._id}')" style="flex:1; padding:7px; background:#ff4d4d; color:white; border:none; border-radius:4px; cursor:pointer; font-size:13px; font-weight:bold;">Quitar favorito</button>
+                            <button onclick="marcarLeida('${notif._id}')" style="padding:7px 10px; background:#eee; color:#555; border:none; border-radius:4px; cursor:pointer; font-size:13px;">✓ Ok</button>`;
+                    } else if (notif.tipo === 'favorito_reservado') {
+                        mensajeHTML = `🏷️ <strong>${notif.anuncio.nombre}</strong> ha sido marcado como <strong style="color:#ffa500;">RESERVADO ⏳</strong>.`;
+                        botonesHTML = `
+                            <a href="${urlDetalle}" onclick="marcarLeida('${notif._id}')" style="flex:1; padding:7px; background:#13c1ac; color:white; border-radius:4px; text-align:center; text-decoration:none; font-size:13px; font-weight:bold;">Ver detalle</a>
+                            <button onclick="quitarFavoritoNotif('${notif.anuncio._id}','${notif._id}')" style="flex:1; padding:7px; background:#ff4d4d; color:white; border:none; border-radius:4px; cursor:pointer; font-size:13px; font-weight:bold;">Quitar favorito</button>
+                            <button onclick="marcarLeida('${notif._id}')" style="padding:7px 10px; background:#eee; color:#555; border:none; border-radius:4px; cursor:pointer; font-size:13px;">✓ Ok</button>`;
+                    } else if (notif.tipo === 'favorito_precio') {
+                        mensajeHTML = `💰 El precio de <strong>${notif.anuncio.nombre}</strong> ha cambiado: <strong style="color:#999; text-decoration:line-through;">${notif.datos?.precioAnterior} €</strong> → <strong style="color:#13c1ac;">${notif.datos?.precioNuevo} €</strong>.`;
+                        botonesHTML = `
+                            <a href="${urlDetalle}" onclick="marcarLeida('${notif._id}')" style="flex:1; padding:7px; background:#13c1ac; color:white; border-radius:4px; text-align:center; text-decoration:none; font-size:13px; font-weight:bold;">Ver detalle</a>
+                            <button onclick="quitarFavoritoNotif('${notif.anuncio._id}','${notif._id}')" style="flex:1; padding:7px; background:#ff4d4d; color:white; border:none; border-radius:4px; cursor:pointer; font-size:13px; font-weight:bold;">Quitar favorito</button>
+                            <button onclick="marcarLeida('${notif._id}')" style="padding:7px 10px; background:#eee; color:#555; border:none; border-radius:4px; cursor:pointer; font-size:13px;">✓ Ok</button>`;
+                    } else {
+                        const urlChat = `/chat.html?anuncioId=${notif.datos?.anuncioId}&conUsuarioId=${notif.datos?.remitenteId}&conUsuario=${encodeURIComponent(notif.datos?.remitenteNombre || '')}`;
+                        const preview = notif.datos?.textoPreview ? `: "<em>${notif.datos.textoPreview}</em>"` : '';
+                        mensajeHTML = `💬 <strong>${notif.datos?.remitenteNombre}</strong> te ha enviado un mensaje sobre <strong>${notif.anuncio.nombre}</strong>${preview}.`;
+                        botonesHTML = `
+                            <a href="${urlChat}" onclick="marcarLeida('${notif._id}')" style="flex:1; padding:7px; background:#4a90d9; color:white; border-radius:4px; text-align:center; text-decoration:none; font-size:13px; font-weight:bold;">💬 Abrir chat</a>
+                            <button onclick="marcarLeida('${notif._id}')" style="padding:7px 10px; background:#eee; color:#555; border:none; border-radius:4px; cursor:pointer; font-size:13px;">✓ Ok</button>`;
+                    }
+
+                    const item = document.createElement('div');
+                    item.style.cssText = 'padding:14px 15px; border-bottom:1px solid #f0f0f0;';
+                    item.innerHTML = `
+                        <p style="margin:0 0 10px; font-size:14px; color:#333;">${mensajeHTML}</p>
+                        <div style="display:flex; gap:7px;">${botonesHTML}</div>
+                    `;
+                    lista.appendChild(item);
+                });
+
+                // En favoritos, recargamos la lista tras quitar un favorito desde notificación
+            })
+            .catch(() => {});
+        }
+
+        async function marcarLeida(idNotif) {
+            await fetch(`http://localhost:3000/notificaciones/${idNotif}/leer`, {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + token }
+            }).catch(() => {});
+            cargarNotificaciones();
+        }
+
+        async function quitarFavoritoNotif(idAnuncio, idNotif) {
+            await fetch(`http://localhost:3000/favoritos/${idAnuncio}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': 'Bearer ' + token }
+            }).catch(() => {});
+            await marcarLeida(idNotif);
+            cargarFavoritos(); // Actualiza la lista de favoritos en pantalla
+        }
+
+        window.marcarLeida         = marcarLeida;
+        window.quitarFavoritoNotif = quitarFavoritoNotif;
+
+        cargarNotificaciones();
+        setInterval(cargarNotificaciones, 10000);
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Wallaclone - Inicio</title>
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #f5f5f5;
+            padding: 0;
+            margin: 0;
+        }
+
+        /* ── NAVBAR ── */
+        .navbar {
+            background-color: #13c1ac;
+            padding: 0 24px;
+            height: 62px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 0;
+            margin-bottom: 28px;
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.18);
+        }
+
+        .navbar h2 {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .menu-botones {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .menu-botones a,
+        .menu-botones button {
+            margin-left: 0;
+            padding: 7px 14px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 13px;
+            white-space: nowrap;
+            transition: opacity 0.15s;
+            font-family: inherit;
+        }
+
+        .menu-botones a:hover,
+        .menu-botones button:hover { opacity: 0.82; }
+
+        .btn-blanco { background: white; color: #13c1ac; border: 1px solid white; }
+        .btn-oscuro { background: rgba(255,255,255,0.18); color: white; border: 1px solid rgba(255,255,255,0.35); }
+        .btn-peligro { background: #e53e3e; color: white; border: none; }
+
+        /* ── PÁGINA ── */
+        .pagina-contenido {
+            padding: 0 24px;
+        }
+
+        h1 {
+            color: #1a1a1a;
+            font-size: 22px;
+            font-weight: 700;
+            margin: 0 24px 18px;
+        }
+
+        /* ── BUSCADOR ── */
+        .buscador {
+            background: white;
+            padding: 16px 20px;
+            margin: 0 24px 24px;
+            border-radius: 12px;
+            box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+        }
+
+        .buscador form {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .buscador input {
+            padding: 9px 14px;
+            border: 1.5px solid #e5e5e5;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            background: #fafafa;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            margin: 0;
+        }
+
+        .buscador input:focus {
+            border-color: #13c1ac;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(19,193,172,0.12);
+        }
+
+        .buscador button {
+            padding: 9px 22px;
+            background: #13c1ac;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 700;
+            font-family: inherit;
+            transition: background 0.2s;
+            margin: 0;
+        }
+
+        .buscador button:hover { background: #0e9e8e; }
+
+        /* ── GALERÍA (GRID) ── */
+        .galeria {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+            gap: 20px;
+            padding: 0 24px;
+            margin-bottom: 10px;
+        }
+
+        /* ── TARJETA ── */
+        .anuncio {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+            overflow: hidden;
+            padding: 0;
+            cursor: pointer;
+            transition: transform 0.22s ease, box-shadow 0.22s ease;
+            position: relative;
+        }
+
+        .anuncio:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 28px rgba(0,0,0,0.13);
+        }
+
+        .anuncio-img-wrapper {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .anuncio-foto {
+            width: 100%;
+            height: 175px;
+            object-fit: cover;
+            display: block;
+            background-color: #efefef;
+            transition: transform 0.3s ease;
+        }
+
+        .anuncio:hover .anuncio-foto {
+            transform: scale(1.05);
+        }
+
+        .anuncio-content {
+            padding: 13px 14px 15px;
+        }
+
+        .precio {
+            font-size: 20px;
+            font-weight: 800;
+            color: #1a1a1a;
+            margin: 0 0 3px;
+            line-height: 1.2;
+        }
+
+        .anuncio-titulo {
+            font-size: 14px;
+            color: #444;
+            margin: 0 0 6px;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .anuncio-desc {
+            font-size: 13px;
+            color: #aaa;
+            margin: 0 0 10px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.4;
+        }
+
+        .etiqueta {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            z-index: 2;
+        }
+
+        .venta   { background: rgba(19,193,172,0.92); color: white; }
+        .busqueda { background: rgba(245,90,60,0.92); color: white; }
+
+        .autor {
+            font-size: 12px;
+            color: #bbb;
+            border-top: 1px solid #f2f2f2;
+            padding-top: 9px;
+        }
+
+        .estado-cartel {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            padding: 5px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 11px;
+            z-index: 2;
+            letter-spacing: 0.5px;
+        }
+
+        .cartel-reservado { background: rgba(255,165,0,0.9); color: white; }
+        .cartel-vendido   { background: rgba(100,100,100,0.88); color: white; }
+
+        /* ── PAGINACIÓN ── */
+        .paginacion {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            padding: 24px;
+        }
+
+        .paginacion button {
+            padding: 10px 26px;
+            margin: 0;
+            background: white;
+            color: #13c1ac;
+            border: 2px solid #13c1ac;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .paginacion button:hover:not(:disabled) {
+            background: #13c1ac;
+            color: white;
+        }
+
+        .paginacion button:disabled {
+            background: #f5f5f5;
+            border-color: #ddd;
+            color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .paginacion span {
+            font-weight: 600;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="navbar">
+        <h2>🛍️ Wallaclone</h2>
+        <div class="menu-botones" id="menu-dinamico"></div>
+    </div>
+
+    <h1>Últimos anuncios publicados</h1>
+
+    <div class="buscador">
+        <form id="form-busqueda">
+            <input type="text" id="busqueda-nombre" placeholder="Buscar por nombre...">
+            <input type="number" id="busqueda-precio-min" placeholder="Precio Min">
+            <input type="number" id="busqueda-precio-max" placeholder="Precio Max">
+            <input type="text" id="busqueda-tag" placeholder="Tag (ej: lifestyle)">
+            <button type="submit">Buscar</button>
+        </form>
+    </div>
+
+    <div id="contenedor-anuncios" class="galeria">
+        <p>Cargando anuncios...</p>
+    </div>
+
+    <!-- NUEVO: Controles de Paginación -->
+    <div class="paginacion">
+        <button id="btn-recientes" disabled>⬅ Más Recientes</button>
+        <span id="texto-pagina">Página 1</span>
+        <button id="btn-antiguos" disabled>Más Antiguos ➡</button>
+    </div>
+
+    <script>
+        function generarUrlAnuncio(nombre, id) {
+            const slug = nombre.toLowerCase()
+                .normalize('NFD').replace(/[̀-ͯ]/g, '')
+                .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+            return `/anuncio/${slug}-${id}`;
+        }
+
+        const token = localStorage.getItem('wallaclone_token');
+        const menuDinamico = document.getElementById('menu-dinamico');
+
+        if (token) {
+            menuDinamico.innerHTML = `
+                <a href="/crear-anuncio.html" class="btn-oscuro">+ Crear Anuncio</a>
+                <a href="/mis-anuncios.html" class="btn-oscuro">Mis Anuncios</a>
+                <a href="/favoritos.html" class="btn-oscuro" style="background:#ffcc00; color:black;">⭐ Favoritos</a>
+                <a href="/mis-conversaciones.html" class="btn-oscuro">💬 Chats</a>
+                <a href="/mi-cuenta.html" class="btn-oscuro">👤 Mi Cuenta</a>
+                <button id="btn-notif" style="position:relative; background:#fff3cd; color:#333; border:none; border-radius:4px; padding:8px 12px; cursor:pointer; font-weight:bold; margin-left:10px;">
+                    🔔 <span id="contador-notif" style="display:none; position:absolute; top:-6px; right:-6px; background:#ff4d4d; color:white; border-radius:50%; padding:1px 5px; font-size:11px;"></span>
+                </button>
+                <button id="btn-logout" class="btn-peligro">Cerrar Sesión</button>
+            `;
+            document.getElementById('btn-logout').addEventListener('click', async () => {
+                const t = localStorage.getItem('wallaclone_token');
+                await fetch('http://localhost:3000/logout', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + t }
+                }).catch(() => {});
+                localStorage.removeItem('wallaclone_token');
+                window.location.reload();
+            });
+
+            // Panel de notificaciones
+            const panelNotif = document.createElement('div');
+            panelNotif.id = 'panel-notif';
+            panelNotif.style.cssText = 'display:none; position:fixed; top:80px; right:20px; width:370px; background:white; border-radius:8px; box-shadow:0 4px 20px rgba(0,0,0,0.2); z-index:1000; max-height:420px; overflow-y:auto;';
+            panelNotif.innerHTML = `
+                <div style="padding:12px 15px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; background:#f8f8f8; border-radius:8px 8px 0 0;">
+                    <strong style="font-size:15px;">🔔 Notificaciones</strong>
+                    <button onclick="document.getElementById('panel-notif').style.display='none'" style="background:none; border:none; cursor:pointer; font-size:18px; color:#888;">✕</button>
+                </div>
+                <div id="lista-notif"></div>
+            `;
+            document.body.appendChild(panelNotif);
+
+            document.getElementById('btn-notif').addEventListener('click', () => {
+                const panel = document.getElementById('panel-notif');
+                panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+            });
+
+            function cargarNotificaciones() {
+                fetch('http://localhost:3000/mis-notificaciones', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                })
+                .then(r => r.json())
+                .then(notifs => {
+                    const contador = document.getElementById('contador-notif');
+                    const lista    = document.getElementById('lista-notif');
+
+                    if (!Array.isArray(notifs) || notifs.length === 0) {
+                        contador.style.display = 'none';
+                        lista.innerHTML = '<p style="padding:20px; text-align:center; color:gray; font-size:14px; margin:0;">Sin notificaciones nuevas</p>';
+                        return;
+                    }
+
+                    contador.textContent   = notifs.length;
+                    contador.style.display = 'inline';
+                    lista.innerHTML        = '';
+
+                    notifs.forEach(notif => {
+                        const slug = notif.anuncio.nombre.toLowerCase()
+                            .normalize('NFD').replace(/[̀-ͯ]/g, '')
+                            .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+                        const urlDetalle = `/anuncio/${slug}-${notif.anuncio._id}`;
+
+                        let mensajeHTML, botonesHTML;
+
+                        if (notif.tipo === 'favorito_vendido') {
+                            mensajeHTML = `🏷️ <strong>${notif.anuncio.nombre}</strong> ha sido marcado como <strong style="color:#808080;">VENDIDO 🤝</strong>.`;
+                            botonesHTML = `
+                                <a href="${urlDetalle}" onclick="marcarLeida('${notif._id}')" style="flex:1; padding:7px; background:#13c1ac; color:white; border-radius:4px; text-align:center; text-decoration:none; font-size:13px; font-weight:bold;">Ver detalle</a>
+                                <button onclick="quitarFavoritoNotif('${notif.anuncio._id}','${notif._id}')" style="flex:1; padding:7px; background:#ff4d4d; color:white; border:none; border-radius:4px; cursor:pointer; font-size:13px; font-weight:bold;">Quitar favorito</button>
+                                <button onclick="marcarLeida('${notif._id}')" style="padding:7px 10px; background:#eee; color:#555; border:none; border-radius:4px; cursor:pointer; font-size:13px;">✓ Ok</button>`;
+                        } else if (notif.tipo === 'favorito_reservado') {
+                            mensajeHTML = `🏷️ <strong>${notif.anuncio.nombre}</strong> ha sido marcado como <strong style="color:#ffa500;">RESERVADO ⏳</strong>.`;
+                            botonesHTML = `
+                                <a href="${urlDetalle}" onclick="marcarLeida('${notif._id}')" style="flex:1; padding:7px; background:#13c1ac; color:white; border-radius:4px; text-align:center; text-decoration:none; font-size:13px; font-weight:bold;">Ver detalle</a>
+                                <button onclick="quitarFavoritoNotif('${notif.anuncio._id}','${notif._id}')" style="flex:1; padding:7px; background:#ff4d4d; color:white; border:none; border-radius:4px; cursor:pointer; font-size:13px; font-weight:bold;">Quitar favorito</button>
+                                <button onclick="marcarLeida('${notif._id}')" style="padding:7px 10px; background:#eee; color:#555; border:none; border-radius:4px; cursor:pointer; font-size:13px;">✓ Ok</button>`;
+                        } else if (notif.tipo === 'favorito_precio') {
+                            mensajeHTML = `💰 El precio de <strong>${notif.anuncio.nombre}</strong> ha cambiado: <strong style="color:#999; text-decoration:line-through;">${notif.datos?.precioAnterior} €</strong> → <strong style="color:#13c1ac;">${notif.datos?.precioNuevo} €</strong>.`;
+                            botonesHTML = `
+                                <a href="${urlDetalle}" onclick="marcarLeida('${notif._id}')" style="flex:1; padding:7px; background:#13c1ac; color:white; border-radius:4px; text-align:center; text-decoration:none; font-size:13px; font-weight:bold;">Ver detalle</a>
+                                <button onclick="quitarFavoritoNotif('${notif.anuncio._id}','${notif._id}')" style="flex:1; padding:7px; background:#ff4d4d; color:white; border:none; border-radius:4px; cursor:pointer; font-size:13px; font-weight:bold;">Quitar favorito</button>
+                                <button onclick="marcarLeida('${notif._id}')" style="padding:7px 10px; background:#eee; color:#555; border:none; border-radius:4px; cursor:pointer; font-size:13px;">✓ Ok</button>`;
+                        } else {
+                            const urlChat = `/chat.html?anuncioId=${notif.datos?.anuncioId}&conUsuarioId=${notif.datos?.remitenteId}&conUsuario=${encodeURIComponent(notif.datos?.remitenteNombre || '')}`;
+                            const preview = notif.datos?.textoPreview ? `: "<em>${notif.datos.textoPreview}</em>"` : '';
+                            mensajeHTML = `💬 <strong>${notif.datos?.remitenteNombre}</strong> te ha enviado un mensaje sobre <strong>${notif.anuncio.nombre}</strong>${preview}.`;
+                            botonesHTML = `
+                                <a href="${urlChat}" onclick="marcarLeida('${notif._id}')" style="flex:1; padding:7px; background:#4a90d9; color:white; border-radius:4px; text-align:center; text-decoration:none; font-size:13px; font-weight:bold;">💬 Abrir chat</a>
+                                <button onclick="marcarLeida('${notif._id}')" style="padding:7px 10px; background:#eee; color:#555; border:none; border-radius:4px; cursor:pointer; font-size:13px;">✓ Ok</button>`;
+                        }
+
+                        const item = document.createElement('div');
+                        item.style.cssText = 'padding:14px 15px; border-bottom:1px solid #f0f0f0;';
+                        item.innerHTML = `
+                            <p style="margin:0 0 10px; font-size:14px; color:#333;">${mensajeHTML}</p>
+                            <div style="display:flex; gap:7px;">${botonesHTML}</div>
+                        `;
+                        lista.appendChild(item);
+                    });
+                })
+                .catch(() => {});
+            }
+
+            async function marcarLeida(idNotif) {
+                await fetch(`http://localhost:3000/notificaciones/${idNotif}/leer`, {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                }).catch(() => {});
+                cargarNotificaciones();
+            }
+
+            async function quitarFavoritoNotif(idAnuncio, idNotif) {
+                await fetch(`http://localhost:3000/favoritos/${idAnuncio}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                }).catch(() => {});
+                await marcarLeida(idNotif);
+            }
+
+            // Exponer al scope global para los onclick inline
+            window.marcarLeida          = marcarLeida;
+            window.quitarFavoritoNotif  = quitarFavoritoNotif;
+
+            cargarNotificaciones();
+            setInterval(cargarNotificaciones, 10000);
+        } else {
+            menuDinamico.innerHTML = `
+                <a href="/login.html" class="btn-blanco">Iniciar Sesión</a>
+                <a href="/registro.html" class="btn-blanco">Registrarse</a>
+            `;
+        }
+
+        // Variables globales para recordar en qué página estamos
+        let paginaActual = 1;
+        let urlBusquedaActual = 'http://localhost:3000/anuncios?';
+
+        function cargarAnuncios(urlBase, paginaRequerida = 1) {
+            const separador = urlBase.includes('?') && !urlBase.endsWith('?') ? '&' : '?';
+            const urlFinal = `${urlBase}${separador}page=${paginaRequerida}`;
+
+            fetch(urlFinal)
+                .then(respuesta => respuesta.json())
+                .then(paquete => {
+                    const contenedor = document.getElementById('contenedor-anuncios');
+                    contenedor.innerHTML = '';
+
+                    // Ahora los anuncios vienen dentro de paquete.anuncios
+                    const anuncios = paquete.anuncios;
+
+                    if (anuncios.length === 0) {
+                        contenedor.innerHTML = '<p>No se encontraron anuncios.</p>';
+                        document.getElementById('btn-recientes').disabled = true;
+                        document.getElementById('btn-antiguos').disabled = true;
+                        document.getElementById('texto-pagina').innerText = `Página 0`;
+                        return;
+                    }
+
+                    anuncios.forEach(anuncio => {
+                        const tarjeta = document.createElement('div');
+                        tarjeta.className = 'anuncio';
+                        const nombreAutor = anuncio.autor?.username || 'Anónimo';
+                        const fotoSrc = anuncio.foto || 'https://placehold.co/250x160?text=Sin+imagen';
+                        const urlDetalle = generarUrlAnuncio(anuncio.nombre, anuncio._id);
+
+                        let cartelHTML = '';
+                        if (anuncio.vendido)        cartelHTML = '<div class="estado-cartel cartel-vendido">VENDIDO 🤝</div>';
+                        else if (anuncio.reservado) cartelHTML = '<div class="estado-cartel cartel-reservado">RESERVADO ⏳</div>';
+
+                        tarjeta.innerHTML = `
+                            <div class="anuncio-img-wrapper">
+                                <img class="anuncio-foto" src="${fotoSrc}" alt="${anuncio.nombre}" onerror="this.src='https://placehold.co/280x175?text=Sin+imagen'">
+                                <span class="etiqueta ${anuncio.tipo}">${anuncio.tipo === 'venta' ? 'Venta' : 'Búsqueda'}</span>
+                                ${cartelHTML}
+                            </div>
+                            <div class="anuncio-content">
+                                <p class="precio">${anuncio.precio} €</p>
+                                <h3 class="anuncio-titulo">${anuncio.nombre}</h3>
+                                <p class="anuncio-desc">${anuncio.descripcion}</p>
+                                <div class="autor">👤 <a href="/${nombreAutor}" style="color:#13c1ac; text-decoration:none; font-weight:600;" onclick="event.stopPropagation()">${nombreAutor}</a></div>
+                            </div>
+                        `;
+                        tarjeta.addEventListener('click', () => window.location.href = urlDetalle);
+                        contenedor.appendChild(tarjeta);
+                    });
+
+                    // ACTUALIZAMOS LOS BOTONES DE PAGINACIÓN
+                    paginaActual = paquete.paginaActual;
+                    document.getElementById('texto-pagina').innerText = `Página ${paginaActual} de ${paquete.totalPaginas}`;
+
+                    // Si estamos en la página 1, deshabilitamos el botón de volver
+                    document.getElementById('btn-recientes').disabled = (paginaActual <= 1);
+                    // Si estamos en la última página, deshabilitamos el de avanzar
+                    document.getElementById('btn-antiguos').disabled = (paginaActual >= paquete.totalPaginas);
+                })
+                .catch(error => {
+                    document.getElementById('contenedor-anuncios').innerHTML = '<p>Error al cargar los anuncios.</p>';
+                });
+        }
+
+        // Cargamos la primera página al inicio
+        cargarAnuncios(urlBusquedaActual, 1);
+
+        // LÓGICA DE LOS BOTONES DE PAGINACIÓN
+        document.getElementById('btn-antiguos').addEventListener('click', () => {
+            cargarAnuncios(urlBusquedaActual, paginaActual + 1);
+        });
+
+        document.getElementById('btn-recientes').addEventListener('click', () => {
+            cargarAnuncios(urlBusquedaActual, paginaActual - 1);
+        });
+
+        // LÓGICA DEL BUSCADOR
+        document.getElementById('form-busqueda').addEventListener('submit', function (evento) {
+            evento.preventDefault();
+
+            const nombre = document.getElementById('busqueda-nombre').value;
+            const precioMin = document.getElementById('busqueda-precio-min').value;
+            const precioMax = document.getElementById('busqueda-precio-max').value;
+            const tag = document.getElementById('busqueda-tag').value;
+
+            const params = new URLSearchParams();
+            if (nombre) params.append('nombre', nombre);
+            if (precioMin) params.append('precioMin', precioMin);
+            if (precioMax) params.append('precioMax', precioMax);
+            if (tag) params.append('tag', tag);
+
+            urlBusquedaActual = `http://localhost:3000/anuncios?${params.toString()}`;
+
+            // Al hacer una búsqueda nueva, siempre volvemos a la página 1
+            cargarAnuncios(urlBusquedaActual, 1);
+        });
+    </script>
+</body>
+
+</html>

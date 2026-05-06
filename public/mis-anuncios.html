@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Mis Anuncios - Wallaclone</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .navbar {
+            background-color: #13c1ac;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        .navbar h2 {
+            margin: 0;
+        }
+
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            margin-left: 15px;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        .galeria {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .anuncio {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 250px;
+            position: relative;
+            border: 2px solid #13c1ac;
+            transition: 0.3s;
+        }
+
+        .precio {
+            font-size: 24px;
+            font-weight: bold;
+            color: #13c1ac;
+            margin: 10px 0;
+        }
+
+        .etiqueta {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .venta {
+            background-color: #e6f7f5;
+            color: #13c1ac;
+        }
+
+        .busqueda {
+            background-color: #fef0ed;
+            color: #f55a3c;
+        }
+
+        /* Estilos nuevos para los estados */
+        .estado-cartel {
+            padding: 5px;
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+
+        .cartel-reservado {
+            background-color: #ffa500;
+            color: white;
+        }
+
+        .cartel-vendido {
+            background-color: #808080;
+            color: white;
+        }
+
+        .anuncio-vendido {
+            opacity: 0.7;
+            border-color: #808080;
+        }
+
+        .anuncio-vendido .precio {
+            color: #808080;
+            text-decoration: line-through;
+        }
+
+        .botones-accion {
+            display: flex;
+            gap: 5px;
+            margin-top: 15px;
+        }
+
+        .btn-accion {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            color: white;
+            font-size: 12px;
+        }
+
+        .btn-reservar {
+            background-color: #ffa500;
+        }
+
+        .btn-vender {
+            background-color: #4CAF50;
+        }
+
+        .btn-borrar {
+            background-color: #ff4d4d;
+        }
+
+        .btn-editar {
+            background-color: #4a90d9;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="navbar">
+        <h2>🛍️ Mi Panel de Control</h2>
+        <div>
+            <a href="/mi-cuenta.html">👤 Mi Cuenta</a>
+            <a href="/">⬅ Volver al Inicio</a>
+        </div>
+    </div>
+
+    <h1>Gestionar mis anuncios</h1>
+
+    <div id="contenedor-mis-anuncios" class="galeria">
+        <p>Cargando tus anuncios...</p>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('wallaclone_token');
+        if (!token) {
+            alert("Acceso denegado.");
+            window.location.href = '/login.html';
+        }
+
+        function cargarMisAnuncios() {
+            fetch('http://localhost:3000/mis-anuncios', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            })
+                .then(respuesta => respuesta.json())
+                .then(datos => {
+                    const contenedor = document.getElementById('contenedor-mis-anuncios');
+                    contenedor.innerHTML = '';
+
+                    if (datos.length === 0) {
+                        contenedor.innerHTML = '<p>Todavía no has publicado ningún anuncio.</p>';
+                        return;
+                    }
+
+                    datos.forEach(anuncio => {
+                        const tarjeta = document.createElement('div');
+                        tarjeta.className = 'anuncio';
+                        if (anuncio.vendido) tarjeta.classList.add('anuncio-vendido');
+
+                        let cartelesHTML = '';
+                        if (anuncio.vendido) cartelesHTML = '<div class="estado-cartel cartel-vendido">¡VENDIDO! 🤝</div>';
+                        else if (anuncio.reservado) cartelesHTML = '<div class="estado-cartel cartel-reservado">RESERVADO ⏳</div>';
+
+                        const textoReservar = anuncio.reservado ? 'Quitar Reserva' : 'Reservar';
+                        const textoVender = anuncio.vendido ? 'Quitar Vendido' : 'Vender';
+
+                        tarjeta.innerHTML = `
+                        ${cartelesHTML}
+                        <h2>${anuncio.nombre}</h2>
+                        <p class="precio">${anuncio.precio} €</p>
+                        <span class="etiqueta ${anuncio.tipo}">${anuncio.tipo.toUpperCase()}</span>
+                        <p>${anuncio.descripcion}</p>
+                        
+                        <div class="botones-accion">
+                            <button class="btn-accion btn-editar" onclick="window.location.href='/editar-anuncio.html?id=${anuncio._id}'">Editar</button>
+                            <button class="btn-accion btn-reservar" onclick="cambiarEstado('${anuncio._id}', 'reservar')">${textoReservar}</button>
+                            <button class="btn-accion btn-vender" onclick="cambiarEstado('${anuncio._id}', 'vender')">${textoVender}</button>
+                            <button class="btn-accion btn-borrar" onclick="borrarAnuncio('${anuncio._id}')">Borrar</button>
+                        </div>
+                    `;
+                        contenedor.appendChild(tarjeta);
+                    });
+                })
+                .catch(error => console.log(error));
+        }
+
+        async function cambiarEstado(idAnuncio, accion) {
+            try {
+                const respuesta = await fetch(`http://localhost:3000/anuncios/${idAnuncio}/estado`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({ accion: accion })
+                });
+
+                if (respuesta.ok) {
+                    cargarMisAnuncios(); // Recargamos para ver el cambio de color
+                }
+            } catch (error) {
+                alert("Error de conexión");
+            }
+        }
+
+        async function borrarAnuncio(idAnuncio) {
+            const confirmacion = confirm("¿Estás seguro de que quieres eliminar este anuncio?");
+            if (confirmacion) {
+                try {
+                    const respuesta = await fetch(`http://localhost:3000/anuncios/${idAnuncio}`, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': 'Bearer ' + token }
+                    });
+                    if (respuesta.ok) cargarMisAnuncios();
+                } catch (error) {
+                    alert("Error de conexión al borrar");
+                }
+            }
+        }
+
+        cargarMisAnuncios();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Chat - Wallaclone</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .navbar {
+            background-color: #13c1ac;
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            color: white;
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .navbar h2 { margin: 0; font-size: 16px; }
+        .navbar a { color: white; text-decoration: none; font-size: 14px; }
+
+        .caja-chat {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            height: 70vh;
+        }
+
+        .chat-header {
+            background: #f8f8f8;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            border-radius: 8px 8px 0 0;
+        }
+        .chat-header h3 { margin: 0; color: #333; font-size: 15px; }
+        .chat-header p  { margin: 4px 0 0; color: gray; font-size: 13px; }
+
+        .mensajes {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .burbuja {
+            max-width: 75%;
+            padding: 10px 14px;
+            border-radius: 18px;
+            font-size: 14px;
+            line-height: 1.4;
+            word-break: break-word;
+        }
+        .burbuja.mia {
+            align-self: flex-end;
+            background-color: #13c1ac;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        .burbuja.suya {
+            align-self: flex-start;
+            background-color: #f0f0f0;
+            color: #333;
+            border-bottom-left-radius: 4px;
+        }
+        .burbuja .hora {
+            font-size: 11px;
+            opacity: 0.7;
+            margin-top: 4px;
+            text-align: right;
+        }
+
+        .sin-mensajes {
+            align-self: center;
+            color: gray;
+            font-size: 14px;
+            margin-top: 40px;
+        }
+
+        .chat-input {
+            display: flex;
+            padding: 12px;
+            border-top: 1px solid #eee;
+            gap: 10px;
+        }
+        .chat-input input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            font-size: 14px;
+            outline: none;
+        }
+        .chat-input input:focus { border-color: #13c1ac; }
+        .chat-input button {
+            padding: 10px 18px;
+            background-color: #13c1ac;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .chat-input button:hover { background-color: #0e8c7c; }
+    </style>
+</head>
+<body>
+
+    <div class="navbar">
+        <h2 id="titulo-navbar">Chat</h2>
+        <div style="display:flex; align-items:center; gap:10px;">
+            <a href="/mis-conversaciones.html">⬅ Mis conversaciones</a>
+            <button id="btn-notif" style="position:relative; background:#fff3cd; color:#333; border:none; border-radius:4px; padding:7px 11px; cursor:pointer; font-weight:bold;">
+                🔔 <span id="contador-notif" style="display:none; position:absolute; top:-6px; right:-6px; background:#ff4d4d; color:white; border-radius:50%; padding:1px 5px; font-size:11px;"></span>
+            </button>
+        </div>
+    </div>
+
+    <div class="caja-chat">
+        <div class="chat-header">
+            <h3 id="chat-con">Cargando...</h3>
+            <p id="chat-anuncio"></p>
+        </div>
+        <div class="mensajes" id="contenedor-mensajes">
+            <p class="sin-mensajes">Cargando mensajes...</p>
+        </div>
+        <form class="chat-input" id="form-mensaje">
+            <input type="text" id="input-mensaje" placeholder="Escribe un mensaje..." autocomplete="off">
+            <button type="submit">Enviar</button>
+        </form>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('wallaclone_token');
+        if (!token) {
+            alert('Debes iniciar sesión para chatear.');
+            window.location.href = '/login.html';
+        }
+
+        // Decodificamos el JWT para obtener el ID del usuario actual
+        function getMiId() {
+            try { return JSON.parse(atob(token.split('.')[1])).id; } catch { return null; }
+        }
+        const miId = getMiId();
+
+        const params       = new URLSearchParams(window.location.search);
+        const anuncioId    = params.get('anuncioId');
+        const conUsuarioId = params.get('conUsuarioId');
+        const conUsuarioNombre = params.get('conUsuario') || 'el otro miembro';
+
+        if (!anuncioId || !conUsuarioId) {
+            document.querySelector('.caja-chat').innerHTML = '<p style="padding:20px;color:red;">Parámetros de chat no válidos.</p>';
+        } else {
+            document.getElementById('chat-con').textContent      = `Conversación con ${conUsuarioNombre}`;
+            document.getElementById('titulo-navbar').textContent  = `Chat con ${conUsuarioNombre}`;
+
+            // Cargamos el nombre del anuncio
+            fetch(`http://localhost:3000/anuncios/${anuncioId}`)
+                .then(r => r.json())
+                .then(a => {
+                    if (a.nombre) document.getElementById('chat-anuncio').textContent = `📦 Sobre: ${a.nombre}`;
+                }).catch(() => {});
+
+            function formatHora(fecha) {
+                const d = new Date(fecha);
+                return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+            }
+
+            function cargarMensajes() {
+                fetch(`http://localhost:3000/anuncios/${anuncioId}/mensajes/${conUsuarioId}`, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                })
+                .then(r => r.json())
+                .then(mensajes => {
+                    const contenedor = document.getElementById('contenedor-mensajes');
+                    if (!Array.isArray(mensajes) || mensajes.length === 0) {
+                        contenedor.innerHTML = '<p class="sin-mensajes">Aún no hay mensajes. ¡Saluda!</p>';
+                        return;
+                    }
+
+                    contenedor.innerHTML = '';
+                    mensajes.forEach(msg => {
+                        const esMio = msg.remitente._id === miId || msg.remitente._id.toString() === miId;
+                        const div = document.createElement('div');
+                        div.className = `burbuja ${esMio ? 'mia' : 'suya'}`;
+                        div.innerHTML = `
+                            ${msg.texto}
+                            <div class="hora">${formatHora(msg.createdAt)}</div>
+                        `;
+                        contenedor.appendChild(div);
+                    });
+
+                    // Scroll al último mensaje
+                    contenedor.scrollTop = contenedor.scrollHeight;
+                })
+                .catch(() => {});
+            }
+
+            cargarMensajes();
+            // Actualizamos cada 4 segundos para simular tiempo real
+            setInterval(cargarMensajes, 4000);
+
+            // Panel de notificaciones (filtra el chat actual)
+            const panelNotif = document.createElement('div');
+            panelNotif.id = 'panel-notif';
+            panelNotif.style.cssText = 'display:none; position:fixed; top:80px; right:20px; width:370px; background:white; border-radius:8px; box-shadow:0 4px 20px rgba(0,0,0,0.2); z-index:1000; max-height:420px; overflow-y:auto;';
+            panelNotif.innerHTML = `
+                <div style="padding:12px 15px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; background:#f8f8f8; border-radius:8px 8px 0 0;">
+                    <strong style="font-size:15px;">🔔 Notificaciones</strong>
+                    <button onclick="document.getElementById('panel-notif').style.display='none'" style="background:none; border:none; cursor:pointer; font-size:18px; color:#888;">✕</button>
+                </div>
+                <div id="lista-notif"></div>
+            `;
+            document.body.appendChild(panelNotif);
+
+            document.getElementById('btn-notif').addEventListener('click', () => {
+                const panel = document.getElementById('panel-notif');
+                panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+            });
+
+            function cargarNotificaciones() {
+                fetch('http://localhost:3000/mis-notificaciones', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                })
+                .then(r => r.json())
+                .then(todasNotifs => {
+                    // Filtramos las notificaciones del chat que está abierto ahora mismo
+                    const notifs = todasNotifs.filter(n =>
+                        !(n.tipo === 'mensaje_nuevo' &&
+                          n.datos?.anuncioId === anuncioId &&
+                          n.datos?.remitenteId === conUsuarioId)
+                    );
+
+                    const contador = document.getElementById('contador-notif');
+                    const lista    = document.getElementById('lista-notif');
+
+                    if (notifs.length === 0) {
+                        contador.style.display = 'none';
+                        lista.innerHTML = '<p style="padding:20px; text-align:center; color:gray; font-size:14px; margin:0;">Sin notificaciones nuevas</p>';
+                        return;
+                    }
+
+                    contador.textContent   = notifs.length;
+                    contador.style.display = 'inline';
+                    lista.innerHTML        = '';
+
+                    notifs.forEach(notif => {
+                        const slug = notif.anuncio.nombre.toLowerCase()
+                            .normalize('NFD').replace(/[̀-ͯ]/g, '')
+                            .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+                        const urlDetalle = `/anuncio/${slug}-${notif.anuncio._id}`;
+
+                        let mensajeHTML, botonesHTML;
+
+                        if (notif.tipo === 'favorito_vendido') {
+                            mensajeHTML = `🏷️ <strong>${notif.anuncio.nombre}</strong> marcado como <strong style="color:#808080;">VENDIDO 🤝</strong>.`;
+                            botonesHTML = `<a href="${urlDetalle}" onclick="marcarLeida('${notif._id}')" style="flex:1; padding:7px; background:#13c1ac; color:white; border-radius:4px; text-align:center; text-decoration:none; font-size:13px; font-weight:bold;">Ver detalle</a>
+                                <button onclick="marcarLeida('${notif._id}')" style="padding:7px 10px; background:#eee; color:#555; border:none; border-radius:4px; cursor:pointer; font-size:13px;">✓ Ok</button>`;
+                        } else if (notif.tipo === 'favorito_reservado') {
+                            mensajeHTML = `🏷️ <strong>${notif.anuncio.nombre}</strong> marcado como <strong style="color:#ffa500;">RESERVADO ⏳</strong>.`;
+                            botonesHTML = `<a href="${urlDetalle}" onclick="marcarLeida('${notif._id}')" style="flex:1; padding:7px; background:#13c1ac; color:white; border-radius:4px; text-align:center; text-decoration:none; font-size:13px; font-weight:bold;">Ver detalle</a>
+                                <button onclick="marcarLeida('${notif._id}')" style="padding:7px 10px; background:#eee; color:#555; border:none; border-radius:4px; cursor:pointer; font-size:13px;">✓ Ok</button>`;
+                        } else if (notif.tipo === 'favorito_precio') {
+                            mensajeHTML = `💰 Precio de <strong>${notif.anuncio.nombre}</strong>: <strong style="color:#999; text-decoration:line-through;">${notif.datos?.precioAnterior} €</strong> → <strong style="color:#13c1ac;">${notif.datos?.precioNuevo} €</strong>.`;
+                            botonesHTML = `<a href="${urlDetalle}" onclick="marcarLeida('${notif._id}')" style="flex:1; padding:7px; background:#13c1ac; color:white; border-radius:4px; text-align:center; text-decoration:none; font-size:13px; font-weight:bold;">Ver detalle</a>
+                                <button onclick="marcarLeida('${notif._id}')" style="padding:7px 10px; background:#eee; color:#555; border:none; border-radius:4px; cursor:pointer; font-size:13px;">✓ Ok</button>`;
+                        } else {
+                            const urlChat = `/chat.html?anuncioId=${notif.datos?.anuncioId}&conUsuarioId=${notif.datos?.remitenteId}&conUsuario=${encodeURIComponent(notif.datos?.remitenteNombre || '')}`;
+                            const preview = notif.datos?.textoPreview ? `: "<em>${notif.datos.textoPreview}</em>"` : '';
+                            mensajeHTML = `💬 <strong>${notif.datos?.remitenteNombre}</strong> sobre <strong>${notif.anuncio.nombre}</strong>${preview}.`;
+                            botonesHTML = `<a href="${urlChat}" onclick="marcarLeida('${notif._id}')" style="flex:1; padding:7px; background:#4a90d9; color:white; border-radius:4px; text-align:center; text-decoration:none; font-size:13px; font-weight:bold;">💬 Abrir chat</a>
+                                <button onclick="marcarLeida('${notif._id}')" style="padding:7px 10px; background:#eee; color:#555; border:none; border-radius:4px; cursor:pointer; font-size:13px;">✓ Ok</button>`;
+                        }
+
+                        const item = document.createElement('div');
+                        item.style.cssText = 'padding:14px 15px; border-bottom:1px solid #f0f0f0;';
+                        item.innerHTML = `
+                            <p style="margin:0 0 10px; font-size:14px; color:#333;">${mensajeHTML}</p>
+                            <div style="display:flex; gap:7px;">${botonesHTML}</div>
+                        `;
+                        lista.appendChild(item);
+                    });
+                })
+                .catch(() => {});
+            }
+
+            async function marcarLeida(idNotif) {
+                await fetch(`http://localhost:3000/notificaciones/${idNotif}/leer`, {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                }).catch(() => {});
+                cargarNotificaciones();
+            }
+
+            window.marcarLeida = marcarLeida;
+
+            cargarNotificaciones();
+            setInterval(cargarNotificaciones, 10000);
+
+            document.getElementById('form-mensaje').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const input = document.getElementById('input-mensaje');
+                const texto = input.value.trim();
+                if (!texto) return;
+
+                input.value = '';
+
+                try {
+                    const respuesta = await fetch(`http://localhost:3000/anuncios/${anuncioId}/mensajes`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + token
+                        },
+                        body: JSON.stringify({ destinatarioId: conUsuarioId, texto })
+                    });
+
+                    if (respuesta.ok) {
+                        cargarMensajes();
+                    } else {
+                        const datos = await respuesta.json();
+                        alert(datos.error || 'Error al enviar el mensaje');
+                        input.value = texto;
+                    }
+                } catch {
+                    alert('Error de conexión');
+                    input.value = texto;
+                }
+            });
+        }
+    </script>
+</body>
+</html>

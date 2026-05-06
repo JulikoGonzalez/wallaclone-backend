@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Anuncio - Wallaclone</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .caja-editar {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 400px;
+        }
+
+        h1 {
+            color: #13c1ac;
+            margin-top: 0;
+            text-align: center;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            color: #555;
+            font-size: 14px;
+            margin-top: 12px;
+        }
+
+        input, select, textarea {
+            width: 95%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 20px;
+            background-color: #13c1ac;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        button:hover { background-color: #0e8c7c; }
+
+        #mensaje {
+            margin-top: 15px;
+            font-weight: bold;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .enlace-volver {
+            display: block;
+            text-align: center;
+            margin-top: 15px;
+            color: #13c1ac;
+            text-decoration: none;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="caja-editar">
+        <h1>Editar Anuncio</h1>
+        <form id="form-editar">
+            <label>Nombre</label>
+            <input type="text" id="nombre" required>
+
+            <label>Imagen (URL)</label>
+            <input type="url" id="foto" placeholder="https://...">
+
+            <label>Precio (€)</label>
+            <input type="number" id="precio" required>
+
+            <label>Tipo</label>
+            <select id="tipo" required>
+                <option value="venta">Lo vendo</option>
+                <option value="busqueda">Lo busco</option>
+            </select>
+
+            <label>Tags (separados por comas)</label>
+            <input type="text" id="tags" required>
+
+            <label>Descripción</label>
+            <textarea id="descripcion" rows="4" required></textarea>
+
+            <button type="submit">Guardar cambios</button>
+        </form>
+        <p id="mensaje"></p>
+        <a href="/mis-anuncios.html" class="enlace-volver">⬅ Volver a mis anuncios</a>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('wallaclone_token');
+        if (!token) {
+            alert('Acceso denegado. Debes iniciar sesión.');
+            window.location.href = '/login.html';
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        const idAnuncio = params.get('id');
+
+        if (!idAnuncio) {
+            document.querySelector('.caja-editar').innerHTML = '<p>Error: No se especificó ningún anuncio.</p>';
+        } else {
+            // Cargamos los datos actuales del anuncio para pre-rellenar el formulario
+            fetch(`http://localhost:3000/anuncios/${idAnuncio}`)
+                .then(res => res.json())
+                .then(anuncio => {
+                    if (anuncio.error) {
+                        document.getElementById('mensaje').textContent = anuncio.error;
+                        document.getElementById('mensaje').style.color = 'red';
+                        return;
+                    }
+
+                    document.getElementById('nombre').value      = anuncio.nombre;
+                    document.getElementById('foto').value        = anuncio.foto || '';
+                    document.getElementById('precio').value      = anuncio.precio;
+                    document.getElementById('tipo').value        = anuncio.tipo;
+                    document.getElementById('tags').value        = anuncio.tags.join(', ');
+                    document.getElementById('descripcion').value = anuncio.descripcion;
+                })
+                .catch(() => {
+                    document.getElementById('mensaje').textContent = 'Error al cargar el anuncio.';
+                    document.getElementById('mensaje').style.color = 'red';
+                });
+        }
+
+        document.getElementById('form-editar').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const cajaMensaje = document.getElementById('mensaje');
+            cajaMensaje.textContent = 'Guardando...';
+            cajaMensaje.style.color = 'black';
+
+            const tagsArreglo = document.getElementById('tags').value
+                .split(',').map(t => t.trim()).filter(t => t.length > 0);
+
+            try {
+                const respuesta = await fetch(`http://localhost:3000/anuncios/${idAnuncio}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({
+                        nombre:      document.getElementById('nombre').value,
+                        foto:        document.getElementById('foto').value,
+                        precio:      document.getElementById('precio').value,
+                        tipo:        document.getElementById('tipo').value,
+                        tags:        tagsArreglo,
+                        descripcion: document.getElementById('descripcion').value
+                    })
+                });
+
+                const datos = await respuesta.json();
+
+                if (respuesta.ok) {
+                    cajaMensaje.textContent = '¡Anuncio actualizado! Redirigiendo...';
+                    cajaMensaje.style.color = 'green';
+                    setTimeout(() => window.location.href = '/mis-anuncios.html', 2000);
+                } else {
+                    cajaMensaje.textContent = datos.error;
+                    cajaMensaje.style.color = 'red';
+                    if (respuesta.status === 401) {
+                        localStorage.removeItem('wallaclone_token');
+                        setTimeout(() => window.location.href = '/login.html', 2000);
+                    }
+                }
+            } catch {
+                cajaMensaje.textContent = 'Error de conexión con el servidor.';
+                cajaMensaje.style.color = 'red';
+            }
+        });
+    </script>
+
+</body>
+</html>
