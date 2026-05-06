@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 
 <head>
@@ -169,7 +169,7 @@
         }
 
         function cargarMisAnuncios() {
-            fetch('http://localhost:3000/mis-anuncios', {
+            fetch('/mis-anuncios', {
                 headers: { 'Authorization': 'Bearer ' + token }
             })
                 .then(respuesta => respuesta.json())
@@ -216,7 +216,7 @@
 
         async function cambiarEstado(idAnuncio, accion) {
             try {
-                const respuesta = await fetch(`http://localhost:3000/anuncios/${idAnuncio}/estado`, {
+                const respuesta = await fetch(`/anuncios/${idAnuncio}/estado`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -237,7 +237,7 @@
             const confirmacion = confirm("¿Estás seguro de que quieres eliminar este anuncio?");
             if (confirmacion) {
                 try {
-                    const respuesta = await fetch(`http://localhost:3000/anuncios/${idAnuncio}`, {
+                    const respuesta = await fetch(`/anuncios/${idAnuncio}`, {
                         method: 'DELETE',
                         headers: { 'Authorization': 'Bearer ' + token }
                     });

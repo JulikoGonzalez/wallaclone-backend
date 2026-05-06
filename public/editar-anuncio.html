@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 
 <head>
@@ -128,7 +128,7 @@
             document.querySelector('.caja-editar').innerHTML = '<p>Error: No se especificó ningún anuncio.</p>';
         } else {
             // Cargamos los datos actuales del anuncio para pre-rellenar el formulario
-            fetch(`http://localhost:3000/anuncios/${idAnuncio}`)
+            fetch(`/anuncios/${idAnuncio}`)
                 .then(res => res.json())
                 .then(anuncio => {
                     if (anuncio.error) {
@@ -160,7 +160,7 @@
                 .split(',').map(t => t.trim()).filter(t => t.length > 0);
 
             try {
-                const respuesta = await fetch(`http://localhost:3000/anuncios/${idAnuncio}`, {
+                const respuesta = await fetch(`/anuncios/${idAnuncio}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',

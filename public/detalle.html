@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 
 <head>
@@ -129,7 +129,7 @@
         if (!idAnuncio || idAnuncio.length !== 24) {
             document.getElementById('contenido-anuncio').innerHTML = '<p>Error: URL de anuncio no válida.</p>';
         } else {
-            fetch(`http://localhost:3000/anuncios/${idAnuncio}`)
+            fetch(`/anuncios/${idAnuncio}`)
                 .then(respuesta => respuesta.json())
                 .then(anuncio => {
                     if (anuncio.error) {
@@ -205,7 +205,7 @@
         // Función para enviar la orden al servidor
         async function marcarFavorito(id) {
             try {
-                const respuesta = await fetch(`http://localhost:3000/favoritos/${id}`, {
+                const respuesta = await fetch(`/favoritos/${id}`, {
                     method: 'POST',
                     headers: { 'Authorization': 'Bearer ' + tokenActual }
                 });

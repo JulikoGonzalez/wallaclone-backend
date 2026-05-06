@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 
 <head>
@@ -193,7 +193,7 @@
             cajaMensaje.style.color = 'black';
 
             try {
-                const respuesta = await fetch('http://localhost:3000/usuarios/mi-cuenta', {
+                const respuesta = await fetch('/usuarios/mi-cuenta', {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -236,7 +236,7 @@
             cajaMensaje.style.color = 'black';
 
             try {
-                const respuesta = await fetch('http://localhost:3000/usuarios/mi-cuenta', {
+                const respuesta = await fetch('/usuarios/mi-cuenta', {
                     method: 'DELETE',
                     headers: { 'Authorization': 'Bearer ' + token }
                 });

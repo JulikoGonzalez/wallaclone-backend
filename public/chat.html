@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -171,7 +171,7 @@
             document.getElementById('titulo-navbar').textContent  = `Chat con ${conUsuarioNombre}`;
 
             // Cargamos el nombre del anuncio
-            fetch(`http://localhost:3000/anuncios/${anuncioId}`)
+            fetch(`/anuncios/${anuncioId}`)
                 .then(r => r.json())
                 .then(a => {
                     if (a.nombre) document.getElementById('chat-anuncio').textContent = `📦 Sobre: ${a.nombre}`;
@@ -183,7 +183,7 @@
             }
 
             function cargarMensajes() {
-                fetch(`http://localhost:3000/anuncios/${anuncioId}/mensajes/${conUsuarioId}`, {
+                fetch(`/anuncios/${anuncioId}/mensajes/${conUsuarioId}`, {
                     headers: { 'Authorization': 'Bearer ' + token }
                 })
                 .then(r => r.json())
@@ -235,7 +235,7 @@
             });
 
             function cargarNotificaciones() {
-                fetch('http://localhost:3000/mis-notificaciones', {
+                fetch('/mis-notificaciones', {
                     headers: { 'Authorization': 'Bearer ' + token }
                 })
                 .then(r => r.json())
@@ -301,7 +301,7 @@
             }
 
             async function marcarLeida(idNotif) {
-                await fetch(`http://localhost:3000/notificaciones/${idNotif}/leer`, {
+                await fetch(`/notificaciones/${idNotif}/leer`, {
                     method: 'POST',
                     headers: { 'Authorization': 'Bearer ' + token }
                 }).catch(() => {});
@@ -322,7 +322,7 @@
                 input.value = '';
 
                 try {
-                    const respuesta = await fetch(`http://localhost:3000/anuncios/${anuncioId}/mensajes`, {
+                    const respuesta = await fetch(`/anuncios/${anuncioId}/mensajes`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',

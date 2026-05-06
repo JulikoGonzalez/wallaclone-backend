@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 
 <head>
@@ -339,7 +339,7 @@
             `;
             document.getElementById('btn-logout').addEventListener('click', async () => {
                 const t = localStorage.getItem('wallaclone_token');
-                await fetch('http://localhost:3000/logout', {
+                await fetch('/logout', {
                     method: 'POST',
                     headers: { 'Authorization': 'Bearer ' + t }
                 }).catch(() => {});
@@ -366,7 +366,7 @@
             });
 
             function cargarNotificaciones() {
-                fetch('http://localhost:3000/mis-notificaciones', {
+                fetch('/mis-notificaciones', {
                     headers: { 'Authorization': 'Bearer ' + token }
                 })
                 .then(r => r.json())
@@ -432,7 +432,7 @@
             }
 
             async function marcarLeida(idNotif) {
-                await fetch(`http://localhost:3000/notificaciones/${idNotif}/leer`, {
+                await fetch(`/notificaciones/${idNotif}/leer`, {
                     method: 'POST',
                     headers: { 'Authorization': 'Bearer ' + token }
                 }).catch(() => {});
@@ -440,7 +440,7 @@
             }
 
             async function quitarFavoritoNotif(idAnuncio, idNotif) {
-                await fetch(`http://localhost:3000/favoritos/${idAnuncio}`, {
+                await fetch(`/favoritos/${idAnuncio}`, {
                     method: 'DELETE',
                     headers: { 'Authorization': 'Bearer ' + token }
                 }).catch(() => {});
@@ -462,7 +462,7 @@
 
         // Variables globales para recordar en qué página estamos
         let paginaActual = 1;
-        let urlBusquedaActual = 'http://localhost:3000/anuncios?';
+        let urlBusquedaActual = '/anuncios?';
 
         function cargarAnuncios(urlBase, paginaRequerida = 1) {
             const separador = urlBase.includes('?') && !urlBase.endsWith('?') ? '&' : '?';
@@ -554,7 +554,7 @@
             if (precioMax) params.append('precioMax', precioMax);
             if (tag) params.append('tag', tag);
 
-            urlBusquedaActual = `http://localhost:3000/anuncios?${params.toString()}`;
+            urlBusquedaActual = `/anuncios?${params.toString()}`;
 
             // Al hacer una búsqueda nueva, siempre volvemos a la página 1
             cargarAnuncios(urlBusquedaActual, 1);

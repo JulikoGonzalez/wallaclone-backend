@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -76,7 +76,7 @@
             return d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
         }
 
-        fetch('http://localhost:3000/mis-conversaciones', {
+        fetch('/mis-conversaciones', {
             headers: { 'Authorization': 'Bearer ' + token }
         })
         .then(r => r.json())

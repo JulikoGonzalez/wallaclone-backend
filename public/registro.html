@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 
 <head>
@@ -153,7 +153,7 @@
 
             try {
                 // Enviamos los datos a nuestro servidor
-                const respuesta = await fetch('http://localhost:3000/registro', {
+                const respuesta = await fetch('/registro', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, email, password })
